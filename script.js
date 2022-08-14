@@ -4,7 +4,6 @@ async function initCalendar() {
   });
   let repaintInterval = setInterval(() => {
     getData().then((data) => {
-      console.log("repainted");
       drawCalendarFromData(data);
     });
   }, 1000);
@@ -58,7 +57,9 @@ function setDay(day) {
 
 async function drawCalendarFromData(data) {
   let now = new Date();
-  setClock(now);
+  //now.setHours("17");
+  //now.setMinutes("46");
+  //setClock(now);
   setDay(data.day);
   let availableEvents = data.events
     .map((event) => ({
@@ -91,17 +92,11 @@ async function drawCalendarFromData(data) {
   let upcomingEvents = availableEvents.filter(
     (event) => event.startTimeDate > now
   );
-  console.log(now, onGoingEvents, upcomingEvents);
-  if (onGoingEvents.length > 0) {
-    drawOnGoingEvents(onGoingEvents, now);
-  }
-  if (upcomingEvents.length > 0) {
-    drawUpcomingEvents(upcomingEvents, now);
-  }
+  drawOnGoingEvents(onGoingEvents, now);
+  drawUpcomingEvents(upcomingEvents, now);
 }
 
 function drawOnGoingEvents(onGoingEvents, now) {
-  console.log("hesten min");
   let onGoingEventsMarkup = onGoingEvents.length
     ? `
         <ul class="ongoing-list">
@@ -126,20 +121,21 @@ function drawOnGoingEvents(onGoingEvents, now) {
         </ul>
     `
     : `<ul class="ongoing-list"><li><div class="event-details">
-                <div class="event-name">Pause</div>
+                <div class="event-name">Ingen pågående arrangement</div>
             </div>
         </li></ul>`;
-  console.log(onGoingEventsMarkup);
+
   let divNode = document.createElement("div");
   divNode.innerHTML = onGoingEventsMarkup;
   document.getElementById("ongoing-events").innerHTML = "";
   document.getElementById("ongoing-events").append(divNode);
 }
 
-function drawUpcomingEvents(onGoingEvents, now) {
-  let upcomingEventsMarkup = `
+function drawUpcomingEvents(upcomingEvents, now) {
+  let upcomingEventsMarkup = upcomingEvents.length
+    ? `
     <ul class="upcoming-list">
-    ${onGoingEvents
+    ${upcomingEvents
       .map((eventData) => {
         return `
         <li> 
@@ -158,7 +154,11 @@ function drawUpcomingEvents(onGoingEvents, now) {
       })
       .join("")}
     </ul>
-`;
+`
+    : `<ul class="upcoming-list"><li><div class="event-details">
+<div class="event-name">Ingen flere arrangement i dag.</div>
+</div>
+</li></ul>`;
   let divNode = document.createElement("div");
   divNode.innerHTML = upcomingEventsMarkup;
   document.getElementById("upcoming-events").innerHTML = "";
@@ -181,13 +181,11 @@ async function fetchData() {
 
 async function getData() {
   // interval has not been started
-  console.log(fetchDataInterval, dataStore);
+
   if (!fetchDataInterval || !dataStore) {
-    console.log("starting interval");
     dataStore = await fetchData();
     fetchDataInterval = setInterval(async () => {
       dataStore = await fetchData();
-      console.log("getting new data");
     }, 30000);
   }
   return dataStore;
